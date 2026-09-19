@@ -12,3 +12,8 @@ export const workflowApi = {
   waiting: (process) => request.get('/workflow/waiting', { params: { process } }),
   confirm: (data) => request.post('/workflow/confirm', data)
 }
+
+export const returnDispatchApi = {
+  ready: () => request.get('/return-dispatch/ready'),
+  dispatch: (packageIds) => request.post('/return-dispatch/dispatch', { packageIds, deviceCode: 'MANUAL-RETURN' })
+}

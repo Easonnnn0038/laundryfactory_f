@@ -55,6 +55,8 @@ import { workflowApi } from '@/api'
 const route = useRoute(); const router = useRouter(); const orderInput = ref(null); const orderNo = ref(''); const order = ref(null)
 const loading = ref(false); const submitting = ref(false); const selectedSort = ref(''); const needDry = ref(true); const needIron = ref(true)
 const station = computed(() => stationByKey(route.params.type))
+// 回店发货已改为按同门店多个大件组批，不再逐订单直接确认发货。
+if (route.params.type === 'return') router.replace('/return-dispatch')
 const processMap = { receive: 'WAIT_IMPORT', sort: 'SORT', wash: 'WASH', dry: 'DRY', iron: 'IRON', quality: 'QUALITY', pack: 'PACK', return: 'RETURN' }
 const sortTypes = [{ code: 'WATER_WASH', name: '水洗' }, { code: 'DRY_CLEAN', name: '干洗' }, { code: 'IRON_ONLY', name: '单烫' }, { code: 'SPECIAL', name: '特殊处理' }]
 const wrongStation = computed(() => !!order.value && station.value?.key !== 'receive' && order.value.currentProcess !== processMap[station.value.key])
