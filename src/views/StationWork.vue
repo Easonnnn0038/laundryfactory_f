@@ -26,7 +26,7 @@
           </div>
           <div class="item-list">
             <h3>衣物明细（{{ order.items?.length || 0 }}件）</h3>
-            <div v-for="(item, index) in order.items" :key="item.id" class="item-row"><b>{{ index + 1 }}</b><div><strong>{{ item.categoryName }}</strong><span>{{ [item.brand, item.color, item.special].filter(Boolean).join(' · ') || '无补充信息' }}</span></div><em>{{ item.barcode }}</em></div>
+            <div v-for="(item, index) in order.items" :key="item.id" class="item-row"><b>{{ index + 1 }}</b><div><strong>{{ item.categoryName }}</strong><span>{{ [item.brand, item.color, item.special].filter(Boolean).join(' · ') || '无补充信息' }} · 当前 {{ processLabel(item.currentProcess) }}</span></div><em>{{ item.barcode }}</em></div>
           </div>
           <div v-if="station.key === 'sort'" class="choice-area">
             <h3>1. 选择处理方式</h3><div class="choice-grid"><button v-for="type in sortTypes" :key="type.code" :class="{ selected: selectedSort === type.code }" @click="selectedSort = type.code">{{ type.name }}</button></div>
@@ -59,7 +59,7 @@ const station = computed(() => stationByKey(route.params.type))
 if (route.params.type === 'return') router.replace('/return-dispatch')
 const processMap = { receive: 'WAIT_IMPORT', sort: 'SORT', wash: 'WASH', dry: 'DRY', iron: 'IRON', quality: 'QUALITY', pack: 'PACK', return: 'RETURN' }
 const sortTypes = [{ code: 'WATER_WASH', name: '水洗' }, { code: 'DRY_CLEAN', name: '干洗' }, { code: 'IRON_ONLY', name: '单烫' }, { code: 'SPECIAL', name: '特殊处理' }]
-const wrongStation = computed(() => !!order.value && station.value?.key !== 'receive' && order.value.currentProcess !== processMap[station.value.key])
+const wrongStation = computed(() => !!order.value && station.value?.key !== 'receive' && !order.value.items?.some(item => item.currentProcess === processMap[station.value.key]))
 const canConfirm = computed(() => station.value?.key !== 'sort' || !!selectedSort.value)
 const actionText = computed(() => ({ sort: '确认分拣完成', wash: '确认洗涤完成', dry: '确认烘干完成', iron: '确认熨烫完成', pack: '确认打包完成', return: '确认发回门店' })[station.value?.key] || '确认完成')
 async function loadOrder() { loading.value = true; order.value = null; try { order.value = station.value.key === 'receive' ? await workflowApi.manualImport(orderNo.value) : await workflowApi.orderDetail(orderNo.value); if (station.value.key === 'receive') ElMessage.success('订单及全部衣物已导入工厂') } finally { loading.value = false; nextTick(() => orderInput.value?.focus()) } }
