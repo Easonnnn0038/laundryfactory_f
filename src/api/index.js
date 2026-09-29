@@ -10,7 +10,12 @@ export const workflowApi = {
   scanImport: (scanCode, deviceCode = 'SCANNER-STATION') => request.post('/workflow/scan-import', { scanCode, deviceCode }),
   orderDetail: (orderNo) => request.get(`/workflow/order/${encodeURIComponent(orderNo)}`),
   waiting: (process) => request.get('/workflow/waiting', { params: { process } }),
-  confirm: (data) => request.post('/workflow/confirm', data)
+  confirm: (data) => request.post('/workflow/confirm', data),
+  uploadQualityPhoto: (file) => {
+    const data = new FormData()
+    data.append('file', file)
+    return request.post('/quality-photos', data)
+  }
 }
 
 export const returnDispatchApi = {
