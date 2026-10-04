@@ -4,6 +4,7 @@ body { margin: 0; min-width: 900px; min-height: 100vh; }
 button, input, textarea { font: inherit; } button { cursor: pointer; }
 .select-page { min-height: 100vh; padding-bottom: 34px; }
 .simple-header { height: 112px; padding: 22px 42px; background: #fff; border-bottom: 3px solid #1769aa; display: flex; align-items: center; justify-content: space-between; }
+.factory-brand { display: flex; align-items: center; gap: 16px; }.factory-brand img { width: 72px; height: 72px; object-fit: contain; filter: drop-shadow(0 5px 8px rgba(10, 91, 99, 0.16)); }
 .simple-header h1 { margin: 0 0 7px; font-size: 30px; }.simple-header p { margin: 0; color: #5e6872; font-size: 18px; }
 .connection { min-width: 145px; padding: 13px 18px; border-radius: 8px; font-size: 17px; font-weight: 700; }.connection span { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 9px; }
 .connection.ok { background: #e5f5e9; color: #24713b; }.connection.ok span { background: #2b9348; }.connection.off { background: #fff0f0; color: #a02f2f; }.connection.off span { background: #cf3e3e; }

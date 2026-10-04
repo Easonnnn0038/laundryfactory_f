@@ -33,9 +33,10 @@ npm run dev
 ```bash
 npm run build
 npm run preview
+npm run electron:pack
 ```
 
-生产产物位于 `dist/`，默认部署基路径为 `/factory/`。API 默认使用同域地址；独立部署时可设置 `VITE_API_BASE_URL`。
+Web 产物位于 `dist/`，Windows 安装程序位于 `release/`。桌面版通过 `.env.desktop` 配置 API；Web 版默认部署基路径为 `/factory/`。
 
 ## 安全说明
 

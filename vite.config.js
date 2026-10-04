@@ -4,7 +4,7 @@ import path from 'node:path'
 
 export default defineConfig(({ mode }) => ({
   plugins: [vue()],
-  base: mode === 'production' ? '/factory/' : '/',
+  base: mode === 'desktop' ? './' : mode === 'production' ? '/factory/' : '/',
   resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
   server: {
     host: '0.0.0.0',

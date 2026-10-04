@@ -1,6 +1,7 @@
 <template>
   <main class="setup-page">
     <el-card class="setup-card">
+      <img class="setup-logo" :src="brandLogo" alt="小木棒洗衣 Logo">
       <h1>工厂设备授权</h1>
       <p>请输入管理员提供的设备令牌。令牌只保存在当前设备。</p>
       <el-form @submit.prevent="save">
@@ -21,6 +22,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import request from '@/api/request'
+import brandLogo from '@/assets/brand-logo.png'
 
 const router = useRouter()
 const deviceCode = ref('')
@@ -49,6 +51,7 @@ async function save() {
 <style scoped>
 .setup-page { min-height: 100vh; display: grid; place-items: center; background: #f3f6fa; padding: 24px; }
 .setup-card { width: min(420px, 100%); }
+.setup-logo { display: block; width: 96px; height: 96px; object-fit: contain; margin: 0 auto 18px; filter: drop-shadow(0 8px 12px rgba(10, 91, 99, 0.18)); }
 h1 { margin: 0 0 12px; font-size: 24px; }
 p { margin: 0 0 24px; color: #606266; line-height: 1.6; }
 .submit { width: 100%; }

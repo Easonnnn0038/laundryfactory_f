@@ -1,7 +1,7 @@
 <template>
   <div class="select-page">
     <header class="simple-header">
-      <div><h1>小木棒洗衣工厂</h1><p>请选择当前工位</p></div>
+      <div class="factory-brand"><img :src="brandLogo" alt="小木棒洗衣 Logo"><div><h1>小木棒洗衣工厂</h1><p>请选择当前工位</p></div></div>
       <div :class="['connection', backendOnline ? 'ok' : 'off']"><span></span>{{ backendOnline ? '系统已连接' : '系统未连接' }}</div>
     </header>
     <main class="station-grid">
@@ -20,8 +20,8 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { stations } from '@/config/stations'
 import { systemApi } from '@/api'
+import brandLogo from '@/assets/brand-logo.png'
 const router = useRouter()
 const backendOnline = ref(false)
 onMounted(async () => { try { await systemApi.status(); backendOnline.value = true } catch { backendOnline.value = false } })
 </script>
-
