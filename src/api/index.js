@@ -1,7 +1,7 @@
 import request from './request'
 
 export const systemApi = {
-  status: () => request.get('/public/status')
+  status: (silent = false) => request.get('/public/status', { silent })
 }
 
 export const workflowApi = {

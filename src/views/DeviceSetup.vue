@@ -3,7 +3,8 @@
     <el-card class="setup-card">
       <img class="setup-logo" :src="brandLogo" alt="小木棒洗衣 Logo">
       <h1>工厂设备授权</h1>
-      <p>请输入管理员提供的设备令牌。令牌只保存在当前设备。</p>
+      <p v-if="authReason" class="auth-reason" role="alert">{{ authReason }}请重新输入管理员提供的设备令牌。</p>
+      <p>当前连接{{ secureConnection ? '已加密，令牌可在本机保留。' : '尚未启用 HTTPS，令牌仅在本次打开期间保存，关闭程序后需重新授权。' }}</p>
       <el-form @submit.prevent="save">
         <el-form-item>
           <el-input v-model="deviceCode" placeholder="设备编号，例如 wash-01" autocomplete="off" />
@@ -22,26 +23,28 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import request from '@/api/request'
+import { clearToken, getAuthReason, getDeviceCode, saveDevice } from '@/api/deviceSession'
 import brandLogo from '@/assets/brand-logo.png'
 
 const router = useRouter()
-const deviceCode = ref('')
+const deviceCode = ref(getDeviceCode())
 const token = ref('')
 const loading = ref(false)
+const secureConnection = location.protocol === 'https:'
+const authReason = ref(getAuthReason())
 
 async function save() {
   if (!/^[A-Za-z0-9_-]{2,40}$/.test(deviceCode.value.trim())) return ElMessage.warning('请输入有效设备编号')
   if (token.value.trim().length < 24) return ElMessage.warning('设备令牌至少24个字符')
   loading.value = true
-  localStorage.setItem('factory_device_code', deviceCode.value.trim())
-  localStorage.setItem('factory_token', token.value.trim())
+  saveDevice(deviceCode.value.trim(), token.value.trim())
   try {
     await request.get('/public/device-check')
+    authReason.value = ''
     ElMessage.success('设备授权成功')
     router.replace('/')
   } catch {
-    localStorage.removeItem('factory_device_code')
-    localStorage.removeItem('factory_token')
+    clearToken()
   } finally {
     loading.value = false
   }
@@ -54,5 +57,6 @@ async function save() {
 .setup-logo { display: block; width: 96px; height: 96px; object-fit: contain; margin: 0 auto 18px; filter: drop-shadow(0 8px 12px rgba(10, 91, 99, 0.18)); }
 h1 { margin: 0 0 12px; font-size: 24px; }
 p { margin: 0 0 24px; color: #606266; line-height: 1.6; }
+.auth-reason { padding: 12px 14px; border-radius: 8px; background: #fff0e8; color: #913f18; }
 .submit { width: 100%; }
 </style>

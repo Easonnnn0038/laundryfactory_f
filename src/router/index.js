@@ -1,4 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
+import { getDeviceCode, getToken } from '@/api/deviceSession'
 
 const routes = [
   { path: '/device-setup', component: () => import('@/views/DeviceSetup.vue'), meta: { title: '设备授权', public: true } },
@@ -11,7 +12,7 @@ const routes = [
 const router = createRouter({ history: createWebHashHistory(), routes })
 router.beforeEach((to) => {
   document.title = `${to.meta.title || '工厂端'} - 小木棒洗衣`
-  if (!to.meta.public && (!localStorage.getItem('factory_token') || !localStorage.getItem('factory_device_code'))) return '/device-setup'
+  if (!to.meta.public && (!getToken() || !getDeviceCode())) return '/device-setup'
 })
 
 export default router

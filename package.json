@@ -1,12 +1,13 @@
 {
   "name": "laundry-factory-frontend",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "小木棒洗衣工厂桌面客户端",
   "author": "LittleStickLaundry",
   "private": true,
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
+    "test": "node --test tests/*.test.mjs",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",

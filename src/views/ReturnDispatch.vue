@@ -3,7 +3,8 @@
     <header><button @click="router.push('/')">← 选择工位</button><h1>回店发货</h1><button @click="reload">刷新待发货</button></header>
     <main>
       <p class="hint">选择同一门店的一批大件；若一个订单拆成多个大件，请将该订单全部大件一起勾选发货。</p>
-      <div v-if="!packages.length" class="empty">暂无已打包、待发货的大件</div>
+      <div v-if="loadError" class="empty" role="alert">待发货列表加载失败，请检查连接后<button type="button" @click="reload">重新加载</button></div>
+      <div v-else-if="!packages.length" class="empty">暂无已打包、待发货的大件</div>
       <div v-for="group in groups" :key="group.storeCode" class="store-group">
         <h2>门店 {{ group.storeCode }} <small>{{ group.packages.length }} 个待发大件</small></h2>
         <label v-for="pkg in group.packages" :key="pkg.id" class="package-row">
@@ -25,6 +26,7 @@ const router = useRouter()
 const packages = ref([])
 const selected = ref([])
 const busy = ref(false)
+const loadError = ref(false)
 const groups = computed(() => {
   const byStore = packages.value.reduce((result, pkg) => {
     ;(result[pkg.storeCode] ||= []).push(pkg)
@@ -33,7 +35,7 @@ const groups = computed(() => {
   return Object.entries(byStore).map(([storeCode, entries]) => ({ storeCode, packages: entries }))
 })
 const selectedStore = computed(() => packages.value.find(p => selected.value.includes(p.id))?.storeCode)
-async function reload() { packages.value = await returnDispatchApi.ready(); selected.value = [] }
+async function reload() { try { packages.value = await returnDispatchApi.ready(); selected.value = []; loadError.value = false } catch { loadError.value = true } }
 async function dispatch() {
   await ElMessageBox.confirm(`确认向门店 ${selectedStore.value} 发出 ${selected.value.length} 个大件吗？`, '装车发货', { type: 'warning' })
   busy.value = true

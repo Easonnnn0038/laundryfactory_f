@@ -1,8 +1,8 @@
 <template>
   <div v-if="station" class="work-page" :style="{ '--station-color': station.color }">
-    <header class="work-header"><button class="back-button" @click="router.push('/')"><el-icon><ArrowLeft /></el-icon><span>选择工位</span></button><div class="work-title"><el-icon><component :is="station.icon" /></el-icon><div><h1>{{ station.name }}</h1><p>{{ station.instruction }}</p></div></div><div class="device-status"><span></span>手动录入</div></header>
+    <header class="work-header"><button class="back-button" @click="router.push('/')"><el-icon><ArrowLeft /></el-icon><span>选择工位</span></button><div class="work-title"><el-icon><component :is="station.icon" /></el-icon><div><h1>{{ station.name }}</h1><p>{{ station.instruction }}</p></div></div><div class="device-status"><span></span>{{ deviceCode }}</div></header>
     <main class="work-content">
-      <section class="scan-panel"><div class="scan-symbol"><el-icon><EditPen /></el-icon></div><h2>输入订单号</h2><p>{{ station.key === 'receive' ? '输入门店已打包送厂的订单号，将整单导入工厂' : `输入需要在${station.name}处理的订单号` }}</p><form class="scan-form" @submit.prevent="loadOrder"><input ref="orderInput" v-model.trim="orderNo" placeholder="请输入完整订单号" autocomplete="off" autofocus><button type="submit" :disabled="!orderNo || loading">{{ loading ? '正在查询...' : station.key === 'receive' ? '导入订单信息' : '查询订单信息' }}</button></form><div class="scanner-reserved"><el-icon><Aim /></el-icon><span>扫码枪接口已预留<br><small>确认设备型号后接入</small></span></div></section>
+      <section class="scan-panel"><div class="scan-symbol"><el-icon><EditPen /></el-icon></div><h2>输入订单号</h2><p>{{ station.key === 'receive' ? '输入门店已打包送厂的订单号，将整单导入工厂' : `输入需要在${station.name}处理的订单号` }}</p><form class="scan-form" @submit.prevent="loadOrder"><input ref="orderInput" v-model.trim="orderNo" placeholder="请输入完整订单号" autocomplete="off" autofocus :aria-describedby="'scan-focus-hint'" @focus="scanFocused = true" @blur="onScanBlur"><button type="submit" :disabled="!orderNo || loading">{{ loading ? '正在查询...' : station.key === 'receive' ? '导入订单信息' : '查询订单信息' }}</button></form><p id="scan-focus-hint" :class="['scan-focus-hint', { active: scanFocused }]">{{ scanFocused ? '输入框已就绪，可直接输入或扫码' : '输入框未聚焦，点击输入框后再扫码' }}</p><div class="scanner-reserved"><el-icon><Aim /></el-icon><span>扫码枪接口已预留<br><small>确认设备型号后接入</small></span></div></section>
       <section class="result-panel">
         <div v-if="!order" class="empty-state"><el-icon><Document /></el-icon><strong>等待输入订单号</strong><span>订单导入后将在这里显示全部物品</span></div>
         <template v-else>
@@ -20,15 +20,17 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Aim, ArrowLeft, Camera, Check, CircleCheckFilled, Document, EditPen, RefreshLeft, WarningFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { stationByKey } from '@/config/stations'
 import { workflowApi } from '@/api'
+import { getDeviceCode } from '@/api/deviceSession'
 
 const route = useRoute(); const router = useRouter(); const orderInput = ref(null); const orderNo = ref(''); const order = ref(null)
 const loading = ref(false); const submitting = ref(false); const photos = ref([]); const photoPreviews = ref([]); const remark = ref('')
+const scanFocused = ref(false); const deviceCode = getDeviceCode()
 const station = computed(() => stationByKey(route.params.type))
 if (route.params.type === 'return') router.replace('/return-dispatch')
 const eligible = computed(() => order.value?.items?.filter(item => {
@@ -40,7 +42,7 @@ const eligible = computed(() => order.value?.items?.filter(item => {
 const wrongStation = computed(() => !!order.value && station.value?.key !== 'receive' && eligible.value.length === 0)
 const actionText = computed(() => ({ 'shoe-wash': '完成洗鞋', pack: '整件打包完成' })[station.value?.key] || '确认完成')
 
-async function loadOrder() { loading.value = true; order.value = null; clearPhotos(); try { order.value = station.value.key === 'receive' ? await workflowApi.manualImport(orderNo.value) : await workflowApi.orderDetail(orderNo.value); if (station.value.key === 'receive') ElMessage.success('订单及全部物品已导入工厂') } finally { loading.value = false; nextTick(() => orderInput.value?.focus()) } }
+async function loadOrder() { loading.value = true; try { const loaded = station.value.key === 'receive' ? await workflowApi.manualImport(orderNo.value) : await workflowApi.orderDetail(orderNo.value); order.value = loaded; clearPhotos(); if (station.value.key === 'receive') ElMessage.success('订单及全部物品已导入工厂') } catch { /* Preserve the previous result for retry. */ } finally { loading.value = false; nextTick(focusScanner) } }
 async function recordProcess(process) { await submitConfirm({ process }, false, '已记录') }
 async function confirmCurrent() { await submitConfirm({ process: station.value.key === 'shoe-wash' ? 'SHOE_WASH' : 'PACK' }, true, station.value.key === 'pack' ? '整件已打包' : '洗鞋完成') }
 async function confirmQuality(qualityResult) { const photoPaths = []; submitting.value = true; try { for (const file of photos.value) photoPaths.push((await workflowApi.uploadQualityPhoto(file)).path); await sendConfirm({ process: 'QUALITY', qualityResult, photoPaths, remark: remark.value }, true, qualityResult === 'PASSED' ? '质检合格' : '已退回返工') } finally { submitting.value = false } }
@@ -50,6 +52,9 @@ function selectPhotos(event) { const selected = [...event.target.files]; if (sel
 function removePhoto(index) { URL.revokeObjectURL(photoPreviews.value[index].url); photoPreviews.value.splice(index, 1); photos.value.splice(index, 1) }
 function clearPhotos() { photoPreviews.value.forEach(photo => URL.revokeObjectURL(photo.url)); photoPreviews.value = []; photos.value = []; remark.value = '' }
 function processLabel(code) { return ({ WAIT_IMPORT: '等待到厂导入', PROCESSING: '衣物加工', SHOE_WASH: '洗鞋', QUALITY: '质检', PACK: '待打包', RETURN: '待发回门店', DONE: '已发回门店', MIXED: '多种处理状态' })[code] || code || '等待导入' }
-watch(() => route.params.type, () => { order.value = null; orderNo.value = ''; clearPhotos() })
-onBeforeUnmount(clearPhotos)
+function focusScanner() { if (document.activeElement === document.body || document.activeElement === orderInput.value) orderInput.value?.focus() }
+function onScanBlur() { scanFocused.value = false; setTimeout(focusScanner, 0) }
+watch(() => route.params.type, () => { order.value = null; orderNo.value = ''; clearPhotos(); nextTick(() => orderInput.value?.focus()) })
+onMounted(() => { orderInput.value?.focus(); window.addEventListener('focus', focusScanner) })
+onBeforeUnmount(() => { clearPhotos(); window.removeEventListener('focus', focusScanner) })
 </script>

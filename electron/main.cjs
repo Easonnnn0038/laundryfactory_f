@@ -1,7 +1,17 @@
-const { app, BrowserWindow, Menu } = require('electron')
+const { app, BrowserWindow, Menu, ipcMain } = require('electron')
 const path = require('path')
+const { productionUrl } = require('./app-config.json')
 
 const isDev = !app.isPackaged
+ipcMain.handle('factory:get-version', () => app.getVersion())
+
+function appUrl() {
+  const url = new URL(process.env.LAUNDRY_FACTORY_APP_URL || productionUrl)
+  if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) {
+    throw new Error('工厂端地址必须是不含账号密码的 HTTP(S) URL')
+  }
+  return url.href
+}
 
 function createWindow() {
   const window = new BrowserWindow({
@@ -20,7 +30,7 @@ function createWindow() {
   })
 
   if (isDev) window.loadURL('http://localhost:5174')
-  else window.loadURL('http://124.220.168.222/factory/')
+  else window.loadURL(appUrl())
 }
 
 if (!isDev) Menu.setApplicationMenu(null)
