@@ -1,6 +1,6 @@
 {
   "name": "laundry-factory-frontend",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "小木棒洗衣工厂桌面客户端",
   "author": "LittleStickLaundry",
   "private": true,
@@ -41,6 +41,7 @@
     "files": [
       "dist/**",
       "electron/**",
+      "build/icon.png",
       "package.json"
     ],
     "win": {
